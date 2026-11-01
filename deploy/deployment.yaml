@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ktr-server
+  labels:
+    app.kubernetes.io/name: k8s-test-runner
+spec:
+  replicas: 2            # stateless: all state lives in Kubernetes Jobs, so replicas need no coordination
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ktr-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ktr-server
+    spec:
+      serviceAccountName: ktr-server
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: server
+          image: ktr-server:dev
+          imagePullPolicy: IfNotPresent
+          args: ["--host", "0.0.0.0", "--port", "8080"]
+          env:
+            - name: KTR_CONFIG
+              value: /etc/ktr/suites.yaml
+            - name: KTR_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ktr-api-token
+                  key: token
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 15
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: suites
+              mountPath: /etc/ktr
+              readOnly: true
+      volumes:
+        - name: suites
+          configMap:
+            name: ktr-suites
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ktr-server
+  labels:
+    app.kubernetes.io/name: k8s-test-runner
+spec:
+  selector:
+    app.kubernetes.io/name: ktr-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

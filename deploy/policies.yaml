@@ -1,0 +1,51 @@
+# Guard rails for the test pods and the namespace.
+
+# Test pods: nothing may connect in, and they may only reach DNS and the public internet.
+# Private ranges and the cloud metadata address are blocked. Narrow this to your test targets.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ktr-runner-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: k8s-test-runner
+  policyTypes: ["Ingress", "Egress"]
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16"]
+---
+# Upper bound for everything the namespace can consume, however many runs are requested.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ktr-quota
+spec:
+  hard:
+    pods: "20"
+    count/jobs.batch: "200"
+    requests.cpu: "8"
+    requests.memory: 8Gi
+    limits.cpu: "16"
+    limits.memory: 16Gi
+---
+# Defaults for any pod that does not set its own resources.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ktr-defaults
+spec:
+  limits:
+    - type: Container
+      default: { cpu: 500m, memory: 512Mi }
+      defaultRequest: { cpu: 100m, memory: 128Mi }

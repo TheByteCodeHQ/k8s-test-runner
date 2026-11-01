@@ -1,0 +1,24 @@
+# Suites are the only things the API can run. Callers choose a name, never an image or a command.
+executor: kubernetes          # kubernetes | local (local = subprocesses, for development)
+namespace: test-runner
+max_active_runs: 5
+ttl_seconds_after_finished: 86400   # finished Jobs (and so run history) are removed after a day
+
+suites:
+  sample:
+    description: Sample pytest suite with two deliberate failures
+    image: ktr-sample-suite:dev
+    command: ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "--junitxml={junit}"]   # must write JUnit XML to {junit}
+    allow_selector: true                  # lets a caller add e.g. "-k checkout"
+    allowed_flags: ["-k", "-m", "-x", "--maxfail"]
+    timeout_seconds: 300
+    resources:
+      requests: { cpu: 250m, memory: 256Mi }
+      limits: { cpu: "1", memory: 512Mi }
+    # env: { BASE_URL: "https://staging.example.com" }
+    # secret_env:                          # values come from Kubernetes Secrets, never from this file
+    #   API_TOKEN: { secret: sample-suite-secrets, key: api-token }
+
+    # Only used when executor is "local":
+    local_command: ["{python}", "-m", "pytest", "-q", "-p", "no:cacheprovider", "--junitxml={junit}"]
+    local_cwd: examples/sample-suite

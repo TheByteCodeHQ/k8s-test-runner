@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Runner</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header>
+    <h1>Test Runner</h1>
+    <span id="executor" class="pill"></span>
+    <button id="token-btn" class="ghost" type="button">Token</button>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Start a run</h2>
+      <form id="run-form">
+        <label>Suite
+          <select id="suite" required></select>
+        </label>
+        <label>Selector <small id="selector-hint"></small>
+          <input id="selector" type="text" placeholder="-k checkout" autocomplete="off">
+        </label>
+        <button type="submit">Run</button>
+      </form>
+      <p id="form-error" class="error" role="alert"></p>
+    </section>
+
+    <section class="card">
+      <h2>Runs</h2>
+      <table>
+        <thead><tr><th>Run</th><th>Suite</th><th>Status</th><th>Started</th><th>Duration</th><th></th></tr></thead>
+        <tbody id="runs"></tbody>
+      </table>
+      <p id="empty" class="muted" hidden>No runs yet.</p>
+    </section>
+
+    <section class="card" id="detail" hidden>
+      <div class="detail-head">
+        <h2 id="detail-title"></h2>
+        <button id="cancel-btn" class="ghost danger" type="button" hidden>Cancel run</button>
+      </div>
+      <p id="detail-message" class="muted"></p>
+      <div id="summary" class="summary"></div>
+      <h3>Results</h3>
+      <table>
+        <thead><tr><th>Test</th><th>Outcome</th><th>Time</th></tr></thead>
+        <tbody id="results"></tbody>
+      </table>
+      <h3>Log</h3>
+      <pre id="log"></pre>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

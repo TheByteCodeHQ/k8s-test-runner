@@ -1,0 +1,17 @@
+# In-cluster configuration, mounted into the control plane as a ConfigMap.
+executor: kubernetes
+namespace: test-runner
+max_active_runs: 5
+ttl_seconds_after_finished: 86400
+
+suites:
+  sample:
+    description: Sample pytest suite with two deliberate failures
+    image: ktr-sample-suite:dev
+    command: ["python", "-m", "pytest", "-q", "-p", "no:cacheprovider", "--junitxml={junit}"]
+    allow_selector: true
+    allowed_flags: ["-k", "-m", "-x", "--maxfail"]
+    timeout_seconds: 300
+    resources:
+      requests: { cpu: 250m, memory: 256Mi }
+      limits: { cpu: "1", memory: 512Mi }

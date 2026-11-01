@@ -1,0 +1,34 @@
+# The control plane may only manage Jobs and read pods and logs in its own namespace.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ktr-server
+  labels:
+    app.kubernetes.io/name: k8s-test-runner
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ktr-server
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "patch"]   # patch is used to suspend (cancel) a Job; no delete needed
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ktr-server
+subjects:
+  - kind: ServiceAccount
+    name: ktr-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ktr-server

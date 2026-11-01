@@ -1,0 +1,15 @@
+name: E2E on kind
+
+# Manual: builds the images, creates a throwaway kind cluster, deploys, and runs the sample suite.
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - run: bash scripts/e2e-kind.sh
